@@ -1,0 +1,22 @@
+{
+  "name": "vlog-auto-assemble",
+  "version": "0.1.0",
+  "description": "Build a ready-to-edit Kdenlive project for a vlog day from staged camera + phone footage",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "vlog-assemble": "bin/vlog-assemble"
+  },
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "start": "node src/cli.ts",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2"
+  }
+}
