@@ -33,6 +33,13 @@ const HEIGHT = 2160;
 const TRACK_A1 = 2;
 const TRACK_V1 = 3;
 
+// Matches the projects' kdenlive:docproperties.proxyminsize.
+const PROXY_MIN_WIDTH = 1000;
+
+export function needsProxy(c: Clip): boolean {
+  return c.hasVideo && (c.width ?? 0) > PROXY_MIN_WIDTH;
+}
+
 const DATE_TITLE_FRAMES = 300; // 5s
 const THANKS_TITLE_FRAMES = 420; // 7s
 
@@ -401,7 +408,10 @@ ${transitions.join('\n')}
   for (const b of bin) {
     const id = `chain${chainN++}`;
     binIds.push(id);
-    out.push(chainXml(id, b, []));
+    // Opening a project doesn't auto-proxy existing bin clips; this flag makes Kdenlive's
+    // Bin::checkMissingProxies() queue them right after load (the same path its document
+    // checker uses to recreate missing proxies). Existing cache files and GoPro .LRVs are reused.
+    out.push(chainXml(id, b, needsProxy(b.clip) ? [['_replaceproxy', 1]] : []));
   }
 
   const docProps: Props = [
@@ -424,7 +434,7 @@ ${transitions.join('\n')}
     ['kdenlive:docproperties.proxyextension', 'mkv'],
     ['kdenlive:docproperties.proxyimageminsize', 2000],
     ['kdenlive:docproperties.proxyimagesize', 800],
-    ['kdenlive:docproperties.proxyminsize', 1000],
+    ['kdenlive:docproperties.proxyminsize', PROXY_MIN_WIDTH],
     ['kdenlive:docproperties.proxyparams', '-fps_mode cfr -vf yadif,scale=%width:-2 -qscale 3 -c:v mjpeg -c:a pcm_s16le'],
     ['kdenlive:docproperties.proxyresize', 640],
     ['kdenlive:docproperties.seekOffset', 18000],

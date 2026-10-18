@@ -13,6 +13,8 @@ function clip(name: string, start: string, durationSec: number, hasAudio = true)
     durationSec,
     hasVideo: true,
     hasAudio,
+    width: 3840,
+    height: 2160,
     size: 1234,
     hash: 'abc',
   };
@@ -61,6 +63,18 @@ test('clips with a loudness measurement get the normalize effect on A1 only', ()
   assert.match(a1, /<property name="kdenlive_id">Normalize 2 pass -16<\/property>/);
   assert.match(a1, /<property name="results">L: -29.100000\tR: 7.200000\tP 0.420000<\/property>/);
   assert.equal([...xml.matchAll(/mlt_service">loudness</g)].length, 1);
+});
+
+test('bin clips above the proxy size threshold are flagged for proxy creation on open', () => {
+  const small = { ...clip('small.mp4', '2026-10-10T12:00:00Z', 1), width: 640, height: 360 };
+  const xml = buildProject({ date: '2026-10-10', clips: [...clips, small], root: '/out', titles: false });
+  const bin = [...xml.matchAll(/<chain id="(chain\d+)"[^>]*>([\s\S]*?)<\/chain>/g)].slice(-4);
+  assert.deepEqual(
+    bin.map(([, , body]) => body.includes('<property name="_replaceproxy">1</property>')),
+    [true, true, true, false],
+  );
+  // Only bin clips carry the flag, not the timeline instances.
+  assert.equal([...xml.matchAll(/_replaceproxy/g)].length, 3);
 });
 
 test('titles can be disabled', () => {
