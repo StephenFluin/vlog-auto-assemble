@@ -45,20 +45,29 @@ correction in seconds to `~/.config/vlog-assemble/config.json`:
 
 Other config keys (with defaults): `stagingDir` (`/staging`), `phoneDir`,
 `projectsDir` (`/super/video-projects/stephen/{year}/vlog`), `dayCutoffUtcHour` (10),
-`titles` (true), `ffprobe` (`ffprobe`).
+`titles` (true), `loudness`, `ffprobe`, `ffmpeg`.
 
 ## What comes out
 
 Same layout as the hand-made daily projects: 4K UHD 60fps, A1-A3 / V1-V3,
 all clips back to back on A1/V1 with audio and video grouped, a 5s date title with
 fade-out at the start of V2 and a 7s "Thanks!" with fade-in ending at the end.
+Every `.mp4` with audio (R5, GoPro, Insta360) gets your **Normalize 2 pass -16**
+effect on its A1 audio, with the analysis pass already done: the tool measures each
+clip with ffmpeg's EBU R128 `ebur128` filter (matches the values Kdenlive's own
+analysis stored in past projects) and writes the `results`, so the gain to -16 LUFS
+is applied as soon as the project opens. If you trim a clip heavily, click
+"Analyse" on the effect to re-measure just the trimmed part. Phone `.nut` files are
+skipped since `process-phone-videos.sh` already loudnorms them. Configure via
+`loudness` (`target`, `extensions`, `effectId`; `null` disables).
+
 Proxy settings match the existing projects; Kdenlive reuses cached proxies in
 `~/.cache/kdenlive/proxy` (the tool computes the same file hash) and GoPro `.LRV`s,
 and generates the rest on open.
 
 ## Install
 
-Needs Node ≥ 23.6 (runs the TypeScript directly, no build step) and `ffprobe`
+Needs Node ≥ 23.6 (runs the TypeScript directly, no build step) and `ffmpeg`/`ffprobe`
 (on macOS: `brew install ffmpeg`).
 
 ```bash

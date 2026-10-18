@@ -22,8 +22,23 @@ export interface Config {
   clockOffsets: Record<string, number>;
   /** Whether to add the daily date title and "Thanks!" outro on V2. */
   titles: boolean;
+  /**
+   * Two-pass EBU R128 normalisation applied to the audio of matching clips, like
+   * Kdenlive's "Normalize 2 pass" effect with the analysis already done. `null` disables it.
+   * Phone .nut files are already loudnorm'd to -16 LUFS by process-phone-videos.sh.
+   */
+  loudness: {
+    /** Target program loudness, LUFS. */
+    target: number;
+    /** File extensions (lowercase) to normalise. */
+    extensions: string[];
+    /** Kdenlive effect id; a custom effect from ~/.local/share/kdenlive/effects, or "loudness" for the built-in. */
+    effectId: string;
+  } | null;
   /** ffprobe executable. */
   ffprobe: string;
+  /** ffmpeg executable (used for loudness analysis). */
+  ffmpeg: string;
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -33,7 +48,9 @@ export const DEFAULT_CONFIG: Config = {
   dayCutoffUtcHour: 10,
   clockOffsets: {},
   titles: true,
+  loudness: { target: -16, extensions: ['.mp4'], effectId: 'Normalize 2 pass -16' },
   ffprobe: 'ffprobe',
+  ffmpeg: 'ffmpeg',
 };
 
 export function configPath(): string {

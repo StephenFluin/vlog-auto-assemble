@@ -52,6 +52,17 @@ test('project places clips back to back on A1/V1 and groups A/V', () => {
   assert.match(xml, /2026-10-10<\/property>/);
 });
 
+test('clips with a loudness measurement get the normalize effect on A1 only', () => {
+  const measured = [{ ...clips[2], loudness: { integrated: -29.1, range: 7.2, peak: 0.42 } }, clips[0]];
+  const xml = buildProject({ date: '2026-10-10', clips: measured, root: '/out', titles: false, loudness: { target: -16, effectId: 'Normalize 2 pass -16' } });
+  const a1 = /<playlist id="playlist4">([\s\S]*?)<\/playlist>/.exec(xml)![1];
+  assert.equal([...a1.matchAll(/mlt_service">loudness</g)].length, 1);
+  assert.match(a1, /<property name="program">-16<\/property>/);
+  assert.match(a1, /<property name="kdenlive_id">Normalize 2 pass -16<\/property>/);
+  assert.match(a1, /<property name="results">L: -29.100000\tR: 7.200000\tP 0.420000<\/property>/);
+  assert.equal([...xml.matchAll(/mlt_service">loudness</g)].length, 1);
+});
+
 test('titles can be disabled', () => {
   const xml = buildProject({ date: '2026-10-10', clips, root: '/out', titles: false });
   assert.doesNotMatch(xml, /kdenlivetitle/);

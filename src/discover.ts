@@ -5,6 +5,7 @@ import type { Config } from './config.ts';
 import { dayWindow, inWindow, parsePixelFilename, parseCreationTime, type DayWindow } from './time.ts';
 import { probe } from './probe.ts';
 import { kdenliveFileHash } from './hash.ts';
+import { measureLoudness, isSilent, type Loudness } from './loudness.ts';
 
 const VIDEO_EXTS = new Set(['.mp4', '.mov', '.m4v', '.mkv', '.nut', '.mts', '.m2ts', '.avi', '.webm']);
 
@@ -25,6 +26,8 @@ export interface Clip {
   fps?: number;
   size: number;
   hash: string;
+  /** Set when the clip's audio should get the two-pass normalisation effect. */
+  loudness?: Loudness;
 }
 
 export interface Discovery {
@@ -137,6 +140,20 @@ export async function inspectClip(path: string, config: Config, warnings: string
   const offset = config.clockOffsets[device];
   if (offset) start = new Date(start.getTime() + offset * 1000);
 
+  let loudness: Loudness | undefined;
+  if (config.loudness && info.hasAudio && config.loudness.extensions.includes(extname(name).toLowerCase())) {
+    try {
+      loudness = await measureLoudness(path, config.ffmpeg);
+      if (!loudness) warnings.push(`Could not measure loudness of ${name}; not normalised`);
+      else if (isSilent(loudness)) {
+        warnings.push(`${name} is silent; not normalised`);
+        loudness = undefined;
+      }
+    } catch (e) {
+      warnings.push(`Loudness analysis failed for ${name}; not normalised (${(e as Error).message.split('\n')[0]})`);
+    }
+  }
+
   const { hash, size } = await kdenliveFileHash(path);
   return {
     path,
@@ -152,6 +169,7 @@ export async function inspectClip(path: string, config: Config, warnings: string
     fps: info.fps,
     size,
     hash,
+    loudness,
   };
 }
 

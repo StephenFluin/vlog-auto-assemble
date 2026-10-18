@@ -1,12 +1,14 @@
 import { createHash, randomUUID } from 'node:crypto';
 import type { Clip } from './discover.ts';
 import { framesToClock, framesToTimecode } from './time.ts';
+import { mltResults } from './loudness.ts';
 
 /**
  * Generates a Kdenlive (26.08 / MLT 7.4x) project that mirrors the structure of the
  * daily vlog projects: 4K60, three audio + three video tracks, every clip on A1/V1
  * in chronological order (audio/video grouped), the date title at the start of V2
- * and the "Thanks!" outro ending at the end of the timeline.
+ * and the "Thanks!" outro ending at the end of the timeline. Camera clips get a
+ * pre-analysed two-pass loudness normalisation effect on their audio.
  *
  * Only properties Kdenlive needs to load the document are written; Kdenlive probes
  * the media itself on open and fills in the rest (and generates/reuses proxies).
@@ -18,6 +20,8 @@ export interface ProjectOptions {
   /** Directory the project will be saved in (MLT `root`). */
   root: string;
   titles: boolean;
+  /** Normalisation effect for clips that carry a loudness measurement. */
+  loudness?: { target: number; effectId: string } | null;
 }
 
 const FPS = 60;
@@ -240,7 +244,20 @@ ${props(
       }
       const id = `chain${chainN++}`;
       out.push(chainXml(id, b, [['set.test_audio', 0], ['set.test_image', 1]]));
-      entries.push(`\n  <entry in="0" out="${b.frames - 1}" producer="${id}">\n   <property name="kdenlive:id">${b.kdenliveId}</property>\n  </entry>`);
+      let effect = '';
+      if (opts.loudness && b.clip.loudness) {
+        // Kdenlive's "Normalize 2 pass" effect with its analysis pass already filled in.
+        const p: Props = [
+          ['program', opts.loudness.target],
+          ['mlt_service', 'loudness'],
+          ['kdenlive_id', opts.loudness.effectId],
+          ['results', mltResults(b.clip.loudness)],
+          ['filterjob', ''],
+          ['kdenlive:collapsed', 0],
+        ];
+        effect = `\n   <property name="kdenlive:activeeffect">0</property>\n   <filter id="${nextFilter()}">\n${props(p, '    ')}\n   </filter>`;
+      }
+      entries.push(`\n  <entry in="0" out="${b.frames - 1}" producer="${id}">\n   <property name="kdenlive:id">${b.kdenliveId}</property>${effect}\n  </entry>`);
     }
     out.push(trackTractor(2, true, entries.join(''), true));
   }

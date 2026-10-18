@@ -91,7 +91,7 @@ async function main() {
     const frames = clipFrames(c);
     const src = c.timeSource === 'mtime' ? '  [mtime!]' : '';
     console.log(
-      `  ${framesToClock(pos, 60).slice(0, 8)}  ${fmtLocal(c.start)}  ${c.device.padEnd(9)} ${c.name.padEnd(40)} ${c.durationSec.toFixed(1).padStart(6)}s${c.hasAudio ? '' : '  (no audio)'}${src}`,
+      `  ${framesToClock(pos, 60).slice(0, 8)}  ${fmtLocal(c.start)}  ${c.device.padEnd(9)} ${c.name.padEnd(40)} ${c.durationSec.toFixed(1).padStart(6)}s${c.hasAudio ? '' : '  (no audio)'}${c.loudness ? `  ${c.loudness.integrated.toFixed(1)} LUFS -> ${config.loudness?.target}` : ''}${src}`,
     );
     pos += frames;
   }
@@ -104,7 +104,7 @@ async function main() {
   if (existsSync(outPath) && !values.force) throw new Error(`${outPath} already exists (use --force to overwrite)`);
 
   await mkdir(outDir, { recursive: true });
-  await writeFile(outPath, buildProject({ date, clips, root: resolve(outDir), titles: config.titles }));
+  await writeFile(outPath, buildProject({ date, clips, root: resolve(outDir), titles: config.titles, loudness: config.loudness }));
   console.log(`\nWrote ${outPath}`);
 }
 
