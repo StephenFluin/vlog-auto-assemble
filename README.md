@@ -59,7 +59,9 @@ analysis stored in past projects) and writes the `results`, so the gain to -16 L
 is applied as soon as the project opens. If you trim a clip heavily, click
 "Analyse" on the effect to re-measure just the trimmed part. Phone `.nut` files are
 skipped since `process-phone-videos.sh` already loudnorms them. Configure via
-`loudness` (`target`, `extensions`, `effectId`; `null` disables).
+`loudness` (`target`, `extensions`, `effectId`; `null` disables). Override the effect
+for one run with `--effect-id loudness` (Kdenlive's built-in, e.g. on a machine
+without the custom effect).
 
 Proxy settings match the existing projects; Kdenlive reuses cached proxies in
 `~/.cache/kdenlive/proxy` (the tool computes the same file hash) and GoPro `.LRV`s,

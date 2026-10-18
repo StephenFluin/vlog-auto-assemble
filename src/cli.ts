@@ -20,6 +20,8 @@ Options:
   -n, --dry-run        Print the clip list without writing anything
   -f, --force          Overwrite an existing project file
       --no-titles      Skip the date title and "Thanks!" outro
+      --effect-id ID   Kdenlive effect id for loudness normalisation
+                       (default: "Normalize 2 pass -16"; use "loudness" for the built-in)
   -h, --help           Show this help
 
 Config: ${configPath()}
@@ -58,6 +60,7 @@ async function main() {
       'dry-run': { type: 'boolean', short: 'n' },
       force: { type: 'boolean', short: 'f' },
       'no-titles': { type: 'boolean' },
+      'effect-id': { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -67,6 +70,7 @@ async function main() {
   }
   const config = loadConfig();
   if (values['no-titles']) config.titles = false;
+  if (values['effect-id'] !== undefined && config.loudness) config.loudness = { ...config.loudness, effectId: values['effect-id'] };
 
   const outDirFor = (date: string) => values['out-dir'] ?? projectsDirFor(config, date);
   const projectPathFor = (date: string) => join(outDirFor(date), `${date}.kdenlive`);
