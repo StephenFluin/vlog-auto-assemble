@@ -87,13 +87,18 @@ function chainXml(id: string, b: BinClip, extra: Props): string {
   return ` <chain id="${id}" out="${b.frames - 1}">\n${props(p, '  ')}\n </chain>`;
 }
 
+// Must be a concrete installed family (the one the hand-made projects use). A generic alias like
+// "Sans Serif" resolves to a different family, so Kdenlive's document checker swaps it on open,
+// flags the project as modified and writes a _backup0 copy on the first save.
+const TITLE_FONT = 'Noto Sans';
+
 function titleXmldata(text: string, frames: number, x: number, y: number, boxWidth: number): string {
   return `<kdenlivetitle LC_NUMERIC="C" duration="${frames}" height="${HEIGHT}" out="${frames - 1}" width="${WIDTH}">
   <item type="QGraphicsTextItem" z-index="0">
    <position x="${x}" y="${y}">
     <transform>1,0,0,0,1,0,0,0,1</transform>
    </position>
-   <content alignment="1" box-height="409" box-width="${boxWidth}" font="Sans Serif" font-color="255,255,255,255" font-italic="0" font-outline="0" font-outline-color="0,0,0,255" font-pixel-size="300" font-underline="0" font-weight="400" letter-spacing="0" shadow="0;#64000000;3;3;3" tab-width="80" typewriter="0;2;1;0;0">${esc(text)}</content>
+   <content alignment="1" box-height="409" box-width="${boxWidth}" font="${TITLE_FONT}" font-color="255,255,255,255" font-italic="0" font-outline="0" font-outline-color="0,0,0,255" font-pixel-size="300" font-underline="0" font-weight="400" letter-spacing="0" shadow="0;#64000000;3;3;3" tab-width="80" typewriter="0;2;1;0;0">${esc(text)}</content>
   </item>
  <startviewport rect="0,0,${WIDTH},${HEIGHT}"/>
  <endviewport rect="0,0,${WIDTH},${HEIGHT}"/>

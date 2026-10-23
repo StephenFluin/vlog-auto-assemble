@@ -77,6 +77,12 @@ test('bin clips above the proxy size threshold are flagged for proxy creation on
   assert.equal([...xml.matchAll(/_replaceproxy/g)].length, 3);
 });
 
+test('titles use a concrete font family so Kdenlive does not rewrite them on open', () => {
+  const xml = buildProject({ date: '2026-10-10', clips, root: '/out', titles: true });
+  assert.equal([...xml.matchAll(/font=&quot;Noto Sans&quot;/g)].length, 2);
+  assert.doesNotMatch(xml, /Sans Serif/);
+});
+
 test('titles can be disabled', () => {
   const xml = buildProject({ date: '2026-10-10', clips, root: '/out', titles: false });
   assert.doesNotMatch(xml, /kdenlivetitle/);
